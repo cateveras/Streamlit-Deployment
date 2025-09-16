@@ -14,11 +14,13 @@ from sklearn.metrics import (
     recall_score
 )
 import matplotlib.pyplot as plt
+
 def main():
     st.title("Binary Classification Web App")
     st.sidebar.title("Binary Classification Web App")
     st.markdown("Are your mushrooms edible or poisonous? 🍄")
     st.sidebar.markdown("Are your mushrooms edible or poisonous? 🍄")
+
     @st.cache_data(persist=True)
     def load_data():
         data = pd.read_csv("mushroom.csv") 
@@ -40,6 +42,7 @@ def main():
             fig, ax = plt.subplots()
             ConfusionMatrixDisplay.from_estimator(model, x_test, y_test, display_labels=class_names, ax=ax)
             st.pyplot(fig)
+
         if 'ROC Curve' in metrics_list:
             st.subheader("ROC Curve")
             fig, ax = plt.subplots()
@@ -51,12 +54,15 @@ def main():
             fig, ax = plt.subplots()
             PrecisionRecallDisplay.from_estimator(model, x_test, y_test, ax=ax)
             st.pyplot(fig)
+
     df = load_data()
     class_names = ['edible', 'poisonous']
     
     x_train, x_test, y_train, y_test = split(df)
     st.sidebar.subheader("Choose Classifier")
     classifier = st.sidebar.selectbox("Classifier", ("Support Vector Machine (SVM)", "Logistic Regression", "Random Forest"))
+
+    # --- SVM ---
     if classifier == 'Support Vector Machine (SVM)':
         st.sidebar.subheader("Model Hyperparameters")
         C = st.sidebar.number_input("C (Regularization parameter)", 0.01, 10.0, step=0.01, key='C_SVM')
@@ -70,48 +76,58 @@ def main():
             model.fit(x_train, y_train)
             accuracy = model.score(x_test, y_test)
             y_pred = model.predict(x_test)
-            st.write("Accuracy: ", accuracy.round(2))
-            st.write("Precision: ", precision_score(y_test, y_pred).round(2))
-            st.write("Recall: ", recall_score(y_test, y_pred).round(2))
+            st.write("Accuracy: ", round(accuracy, 2))
+            st.write("Precision: ", round(precision_score(y_test, y_pred), 2))
+            st.write("Recall: ", round(recall_score(y_test, y_pred), 2))
             plot_metrics(metrics, model, x_test, y_test, class_names)
     
+    # --- Logistic Regression ---
     if classifier == 'Logistic Regression':
         st.sidebar.subheader("Model Hyperparameters")
         C = st.sidebar.number_input("C (Regularization parameter)", 0.01, 10.0, step=0.01, key='C_LR')
         max_iter = st.sidebar.slider("Maximum number of iterations", 100, 500, key='max_iter')
         metrics = st.sidebar.multiselect("What metrics to plot?", ('Confusion Matrix', 'ROC Curve', 'Precision-Recall Curve'))
+
         if st.sidebar.button("Classify", key='classify_lr'):
             st.subheader("Logistic Regression Results")
             model = LogisticRegression(C=C, penalty='l2', max_iter=max_iter)
             model.fit(x_train, y_train)
             accuracy = model.score(x_test, y_test)
             y_pred = model.predict(x_test)
-            st.write("Accuracy: ", accuracy.round(2))
-            st.write("Precision: ", precision_score(y_test, y_pred).round(2))
-            st.write("Recall: ", recall_score(y_test, y_pred).round(2))
+            st.write("Accuracy: ", round(accuracy, 2))
+            st.write("Precision: ", round(precision_score(y_test, y_pred), 2))
+            st.write("Recall: ", round(recall_score(y_test, y_pred), 2))
             plot_metrics(metrics, model, x_test, y_test, class_names)
     
+    # --- Random Forest ---
     if classifier == 'Random Forest':
         st.sidebar.subheader("Model Hyperparameters")
         n_estimators = st.sidebar.number_input("The number of trees in the forest", 100, 5000, step=10, key='n_estimators')
         max_depth = st.sidebar.number_input("The maximum depth of the tree", 1, 20, step=1, key='max_depth')
         bootstrap = st.sidebar.radio("Bootstrap samples when building trees", (True, False), key='bootstrap')
         metrics = st.sidebar.multiselect("What metrics to plot?", ('Confusion Matrix', 'ROC Curve', 'Precision-Recall Curve'))
+
         if st.sidebar.button("Classify", key='classify_rf'):
             st.subheader("Random Forest Results")
             model = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth, bootstrap=bootstrap, n_jobs=-1)
             model.fit(x_train, y_train)
             accuracy = model.score(x_test, y_test)
             y_pred = model.predict(x_test)
-            st.write("Accuracy: ", accuracy.round(2))
-            st.write("Precision: ", precision_score(y_test, y_pred).round(2))
-            st.write("Recall: ", recall_score(y_test, y_pred).round(2))
+            st.write("Accuracy: ", round(accuracy, 2))
+            st.write("Precision: ", round(precision_score(y_test, y_pred), 2))
+            st.write("Recall: ", round(recall_score(y_test, y_pred), 2))
             plot_metrics(metrics, model, x_test, y_test, class_names)
+
+    # --- Raw Data ---
     if st.sidebar.checkbox("Show raw data", False):
         st.subheader("Mushroom Data Set (Classification)")
         st.write(df)
-        st.markdown("This [data set](https://archive.ics.uci.edu/ml/datasets/Mushroom) includes descriptions of hypothetical samples corresponding to 23 species of gilled mushrooms "
-        "in the Agaricus and Lepiota Family (pp. 500-525). Each species is identified as definitely edible, definitely poisonous, "
-        "or of unknown edibility and not recommended. This latter class was combined with the poisonous one.")
+        st.markdown(
+            "This [data set](https://archive.ics.uci.edu/ml/datasets/Mushroom) includes descriptions of hypothetical samples "
+            "corresponding to 23 species of gilled mushrooms in the Agaricus and Lepiota Family (pp. 500-525). "
+            "Each species is identified as definitely edible, definitely poisonous, or of unknown edibility and not recommended. "
+            "This latter class was combined with the poisonous one."
+        )
+
 if __name__ == '__main__':
     main()
